@@ -1,0 +1,72 @@
+#!markdown
+
+# 准备开始
+
+这一章，我们将：
+- 简单回顾一下C#历史
+- 配置C#的学习环境
+- 写一个hello world
+
+#!markdown
+
+## C#演化史
+
+C#是由微软公司主导开发的一种强类型、静态语言。其设计深受Java的影响。从2000年面世后的很长一段时间，它都是一个闭源的，只支持Windows的开发语言。从2015年开始，微软公司开始推出.NET Core平台，经过6年时间，逐渐将其改造为开源跨平台开发语言。
+
+下表列举了C#演进过程中的主要特性变化，表中一些名词还未介绍，不用担心，后续会逐渐熟悉。
+
+|  版本   | 主要新特性  | 新特性设计目标 |  日期  |  .NET  |
+|  ----  | ----  | ----  | ----  | ----  | 
+| C# 1.x  | 基本特性 |  强类型、静态语言  | 2002年1月 | .NET Framework 1.x  |
+| C# 2.0  | 泛型 |  革新通用算法实现、提高性能  |  2005年11月  | .NET Framework 2  |
+| C# 3.0  | LINQ |  统一查询  |  2007年11月 | .NET Framework 3.x  |
+| C# 4.0  | 动态类型、命名实参 |  简化代码  | 2010年4月 | .NET Framework 4  |
+| C# 5.0  | async/await |  革新异步编程  | 2012年8月 | .NET Framework 4.5  |
+| C# 6.0  | null-conditional operator |  简化代码  | 2015年7月 | .NET Framework 4.6、.NET Core 1.x  |
+| C# 7.x  | pattern matching |  简化代码  | 2017年3月 | .NET Framework 4.7/4.8、.NET Core 2.x  |
+| C# 8.0  | nullable reference type |  减少错误  | 2019年9月 | .NET Core 3.x  |
+| C# 9.0  | record |  拥抱immutable  | 2020年9月 | .NET 5  |
+| C# 10.0  | implicit using |  进一步简化代码  | 2021年11月 | .NET 6  |
+
+语言最重磅的更新包括：泛型、LINQ、异步编程、record，这些在后面都会浓墨重彩地介绍。
+
+#!markdown
+
+## 配置C#学习环境
+
+1. 安装visual studio
+   到微软官网下载对应平台的visual studio并安装。安装过程中，选择包含.NET网络开发的工作负载（对本课程而言，这个工作负载已经够用）。
+   visual studio安装过程中，会同时安装.NET SDK及Runtime。安装完成后，可在命令行检查是否安装成功：
+
+   ```dotnet --info```
+   
+   如果上述命令成功返回安装的SDK与runtime版本，说明安装成功。
+2. 安装vs code
+   1. 下载并安装vs code
+   2. 安装C# extension与.NET Interactive Notebooks extension
+3. 克隆本repo到本地，即可使用vs code打开并运行notebook了。
+4. notebook的使用参见[.NET Interactive Notebooks with C#/F# in VS Code](https://www.youtube.com/watch?v=DMYtIJT1OeU).
+5. 两个程序的用途不同：如果是创建应用程序，使用visual studio，如果是打开C# notebook，则使用vs code。
+
+#!markdown
+
+## Hello World
+
+说了这么多，终于可以进入正题了。我们先来看看最经典的hello world程序。
+
+#!csharp
+
+Console.WriteLine("Hello World");
+
+#!markdown
+
+运行上面的cell，会输出Hello World。恭喜，你完成了第一个C#程序。
+
+它的运行过程是这样的：
+1. 首先，这段程序被编译为中间语言（intermediate language，简称IL）
+2. 然后，由运行时（Common language Runtime）加载并运行IL
+3. CLR运行IL的过程是一边编译、一边运行，这被称为即时编译（Just In Time compiler，简称JIT).这一步编译是把IL编译为所在机器说对应的机器码。
+
+通过IL，.NET用一个平台支持不同的编程语言，包括C#、F#、VB等。通过跨平台的CLR，.NET支持跨平台的运行能力。它们共同构成了.NET平台：
+
+![net](./resources/what_is_dotnet.png)
