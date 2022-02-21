@@ -1,0 +1,190 @@
+#!markdown
+
+# C#类型
+
+这一章，我们将：
+- C#类型的含义
+- C#的类型系统
+- C#基本类型
+- 引用类型与值类型
+
+#!markdown
+
+## C#类型的含义
+
+C#是一种面向对象的编程语言，在C#的世界里，一切皆为类型或对象。
+
+- 类型（class）：包含状态（fields）与行动（methods）的单一集合体。
+- 对象（object）：类型实例化后结果既是对象。
+
+来看个例子。
+
+#!csharp
+
+// define a new class
+public class Person {
+    public string FirstName { get; init; }
+    public string LastName { get; init; }
+
+    // override the ToString method, so that it is more friendly to display
+    // it is a good place to define a custom ToString method
+    public override string ToString() 
+        => $"My name is: {FirstName} {LastName}";
+}
+
+#!markdown
+
+上面的代码段定义了一个类型，名为`Person`，它包含`FirstName`和`LastName`两个字段，在C#中也称为属性（Property）。
+
+#!csharp
+
+// use new keyword to create an instance of the class
+Person p = new Person { FirstName = "Jeffrey", LastName = "Ye" };
+Console.WriteLine(p);
+
+#!markdown
+
+上面的代码段实例化（instantiate）了一个对象，并调用`Console`类的`WriteLine`方法，输出了这个对象。这个方法会调用`Person`类的`ToString`方法，并将返回的字符串输出到控制台。
+
+一般而言，重写`ToString`方法都是很好的选择，因为无论是输出到控制台，抑或是IDE中，都会调用它显示这个实例的信息，对调试很有帮助。
+
+为了表明这一点，我们另定义一个类，但不覆写`ToString`。
+
+#!csharp
+
+public class Teacher{
+    public string FirstName { get; init; }
+    public string LastName { get; init; }
+    public string Subject { get; init; }
+}
+
+var t = new Teacher { FirstName = "Jeffrey", LastName = "Ye", Subject = "Math" };
+Console.WriteLine(t.ToString());
+Console.WriteLine(t);
+
+#!markdown
+
+不覆写该方法时，默认的输出是该实例的对象类型，在此处就是`Teacher`.
+
+#!markdown
+
+## C#的类型系统
+
+在C#中，所有类型都从object中继承而来。因此，下面两种定义是等价的：
+
+```csharp
+// this definition
+public class Person
+{
+    public string FirstName {get;init;}
+    public string LastName {get;init;}
+}
+
+// is the same with
+public class Person : Object
+{
+    public string FirstName {get;init;}
+    public string LastName {get;init;}
+}
+```
+
+这里，`Object`称为基类，`Person`称为派生类，如果在微软官方文档中通常会写为Object -> Person。
+
+#!markdown
+
+C#中有两种不同的类型，引用类型（reference type）与值类型（value type）。下面分别介绍。
+
+### 引用类型
+
+引用类型的变量指向对象，值类型则直接包含数据。且通常情况下，引用类型在堆（heap）上分配，值类型在栈（stack）上分配。如果对heap与stack没有概念也没有关系，后续会逐渐深入。
+
+由一下关键字定义的类型都是引用类型：
+- class
+- interface
+- delicate
+- record
+
+以下内建类型（build-in type）也是引用类型：
+- dynamic
+- object
+- string
+
+这些类型中的大多数我们都将单独讨论。
+
+### 值类型
+
+值类型的变量直接包含实例的数据，而不是一个引用。
+
+以下关键字会定义值类型：
+- struct
+- enum
+
+以下内建类型为值类型：
+- 整数类型（Integral numeric types）
+- 浮点数类型（Floating-point numeric types）
+- 布尔类型（bool that represents a Boolean value）
+- 字符类型（char that represents a Unicode UTF-16 character）
+
+我发现在同一性（identity）与相等性（equality）是分析这两种类型的最佳地方，下一章将讨论这个问题。
+
+#!markdown
+
+### C#基本类型
+
+我们来看看C#中内建的一些基本类型。
+
+#!csharp
+
+// char
+char c = '1';  // use single quotation for char literal
+Console.WriteLine("c = " + c.ToString());
+Console.WriteLine($"{c} cast to int is {(int)c}");
+
+// 在char与int之间转换
+int cToInt = '1' - '0';  // 在内部，‘1’与‘0’都会转换为int，然后作为int进行运算
+Console.WriteLine("after cast, char '1' is " + cToInt);
+char intToChar = (char)(1 + '0');  // 把int转换为char的方法
+Console.WriteLine("after cast, int 1 is " + intToChar);
+
+#!csharp
+
+// string
+// string类型在内部就是一个char array
+string name = "Jeffrey Ye";
+foreach(char c in name)
+    Console.Write(c + " ");
+Console.WriteLine();
+
+// string的第一个特点，immutable
+string hello = "Hello " + name;  // 这将创建一个新的字符串，原串"Jeffrey Ye"不会发生变化
+Console.WriteLine(hello);
+
+#!csharp
+
+// 由于string是immutable，因此可能存在性能问题
+// 例如，在循环中创建很多并不需要的中间字符串
+string accumulate = "";
+for(int i=0; i<10000; i++)
+    accumulate += i.ToString();
+
+#!markdown
+
+在上面的代码中，将创建10000个中间字符串，占用大量的内存，但需要的只是最后的结果字符串。为了应对这个问题，C#中提供了`StringBuilder`类，可以避免创建大量无用的字符串。
+
+#!csharp
+
+// using StringBuilder
+StringBuilder sb = new();
+for(int i=0; i<10000; i++)
+    sb.Append(i.ToString());
+accumulate = sb.ToString();
+
+#!markdown
+
+可以发现，速度提到了快40倍，如果我们对这两个处理方法进行Benchmark，就可以发现不但时间上游差距，内存消耗上也相差极大。因此，如果计算中存在大量无用的中间字符串，就应该考虑使用StringBuilder类来创建string。
+
+#!csharp
+
+// 获取子字符串
+string str = "Hello Jeffrey Ye";
+Console.WriteLine(str.Substring(6, 7));
