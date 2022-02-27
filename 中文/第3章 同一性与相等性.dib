@@ -1,0 +1,484 @@
+#!markdown
+
+# 同一性与相等性
+
+在这一章，我们将：
+1. 理清同一性（identity）与相等性（equality）的关系
+2. 学习如何覆写相等性（overriding equality）
+
+#!markdown
+
+## 同一性与相等性
+
+- 同一性（identity）是指两个对象指向同一个对象。
+- 相等性（equality）是指两个对象的值相等。
+
+我们来看一个例子。
+
+#!csharp
+
+// define a Person class
+public class Person
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+
+#!csharp
+
+// create a instance
+var p = new Person{FirstName="Jeffrey", LastName = "Ye"};
+var p1 = p;  // p1 reference object p
+var p2 = p;  // p2 reference object p
+Console.WriteLine(Object.ReferenceEquals(p1, p2));
+
+#!markdown
+
+`Object`的`ReferenceEquals`方法会判断两个对象是否指向（reference）同一个对象。
+
+上面的代码华中，变量p1与变量p2指向同一个对象，因此它们实际上代表同一个对象，因此它们表达的是同一性，即identity相同。
+![identity](./resources/identity.png)
+
+#!csharp
+
+// create 2 instance with the same value
+var p3 = new Person{FirstName="Jeffrey", LastName = "Ye"};
+var p4 = new Person{FirstName="Jeffrey", LastName = "Ye"};
+Console.WriteLine(Object.ReferenceEquals(p3, p4));
+Console.WriteLine(p3.Equals(p4));
+
+#!markdown
+
+在上面的代码中，p3与p4是两个不同的对象，有着相同的值。因此当调用`ReferenceEquals`时，会返回False。
+
+两个对象的关系是这样的：
+![equals](./resources/equality.png)
+
+那么在调用`Equals`方法时为什么也返回了`False`呢？这两个对象的值是一样的呀，它们为啥会不相等呢？这就要从这个`Equals`方法的来历说起。
+
+#!markdown
+
+## 覆写Equals方法
+
+C#中，`Object`类是所有类的基类。在该基类中，定义了下面两个方法：
+- `Equals`
+- `GetHashCode`
+
+在该类的默认实现中，`Equals`会直接返回调用`ReferenceEquals`得到的结果。这就是`Console.WriteLine(p3.Equals(p4));`会返回`False`的原因。
+
+因此，当你希望你的`Equals`方法的返回包含`值相等`的语义时，你需要覆写（override）这个方法。
+
+这有何难，我们逐一比较所关心的属性即可。
+
+### Step 1: Override Equals
+
+#!csharp
+
+public sealed class PersonA
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public override bool Equals(Object obj)
+    {
+        var other = obj as PersonA;
+        return this.FirstName == other.FirstName
+            && this.LastName == other.LastName;
+    }
+}
+
+var pa1 = new PersonA { FirstName = "Jeffrey", LastName = "Ye" };
+var pa2 = new PersonA { FirstName = "Jeffrey", LastName = "Ye" };
+Console.WriteLine($"pa1.Equals(pa2): {pa1.Equals(pa2)}"); // true
+
+#!markdown
+
+哈哈，搞定了！不要高兴太早，看看其他测试用例。
+
+#!csharp
+
+Console.WriteLine($"pa1.Equals(pa2): {pa1.Equals(p1)}");
+
+#!markdown
+
+咦,我们怎么会有一个**NullReferenceException**? 分析我们的实现不难发现，在将传入的对象强制转换为**PersonA**类型时，由于**Person**类与**PersonA**类不能转换，因此转换的结果是null，从而在接下来的判断中，引发**NullReferenceException**。这很好修改：
+
+#!csharp
+
+public class PersonB
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public override bool Equals(Object obj)
+    {
+        var other = obj as PersonB;
+        return other is Object
+            && this.FirstName == other.FirstName
+            && this.LastName == other.LastName;
+    }
+}
+
+var pb1 = new PersonB { FirstName = "Jeffrey", LastName = "Ye"};
+var pb2 = new PersonB { FirstName = "Jeffrey", LastName = "Ye"};
+
+Console.WriteLine($"pb1.Equals(pb2): {pb1.Equals(pb2)}");
+Console.WriteLine($"pb1.Equals(p1): {pb1.Equals(p1)}");
+
+#!markdown
+
+问题解决，但上面的实现还不完美，这其中有两点：
+1. 后面我们会看到，操作符`==`也是可以被重载的，因此，为了保险起见，在重写值相等时,最好避免使用该操作符。
+2. 传入的`obj`参数，在逐一比较它们的property之前，我们可以做一些特定的判断来提高性能。
+
+改进后的代码如下。
+
+#!csharp
+
+public class PersonC
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public override bool Equals(Object obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        var other = obj as PersonC;
+        return this.FirstName.Equals(other.FirstName)
+            && this.LastName.Equals(other.LastName);
+    }
+}
+
+#!markdown
+
+### Step 2: Override == Operator
+
+为什么要重载`==`及`!=`呢？为了保持类相等含义的一致性。考虑上一小节实现类，如果不重载这两个操作符，会发生什么？
+
+#!csharp
+
+var pc1 = new PersonC{ FirstName = "Jeffrey", LastName = "Ye" };
+var pc2 = new PersonC{ FirstName = "Jeffrey", LastName = "Ye" };
+Console.WriteLine($"pc1.Equals(pc2): {pc1.Equals(pc2)}");
+Console.WriteLine($"pc1 == pc2: {pc1 == pc2}");
+
+#!markdown
+
+问题很严重：`==`和Equals结果不一样！当不重载时，`==`将使用ReferenceEqual，当`Equals`与`==`、`!=`不同时重载时，就会造成它们的不一致。使用这个类就会造成困惑，因此，Equals和这两个操作符通常是一起重写的。
+
+#!csharp
+
+public class PersonD
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public override bool Equals(Object obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        var other = obj as PersonD;
+        return this.FirstName.Equals(other.FirstName)
+            && this.LastName.Equals(other.LastName);
+    }
+
+    public static bool operator ==(PersonD left, PersonD right)
+    {
+        return left == right;  // this line introduce a recursive call, which will be a infinite loop
+    }
+
+    public static bool operator !=(PersonD left, PersonD right)
+    {
+        return left != right;
+    }
+}
+
+#!markdown
+
+简单吧！但是我们无意中却引入了一个重大的bug！我们通过测试用例来看一看这个bug。
+
+#!csharp
+
+var pd1 = new PersonD{ FirstName = "Jeffrey", LastName = "Ye" };
+var pd2 = new PersonD{ FirstName = "Jeffrey", LastName = "Ye" };
+
+// this call will trigger infinite loop, if you call it, stop it using the stop kernel command
+// Console.WriteLine($"pd1 == pd2: {pd1 == pd2}");
+
+#!markdown
+
+解决的办法就是实现==时，调用Equals，而不是调用操作符自己。
+
+#!csharp
+
+public class PersonE
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public override bool Equals(Object obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        var other = obj as PersonE;
+        return this.FirstName.Equals(other.FirstName)
+            && this.LastName.Equals(other.LastName);
+    }
+
+    public static bool operator ==(PersonE left, PersonE right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);  // call Equals
+    }
+
+    public static bool operator !=(PersonE left, PersonE right)
+    {
+        return !(left == right);  // Here can call the ==
+    }
+}
+
+var pe1 = new PersonE{ FirstName = "Jeffrey", LastName = "Ye" };
+var pe2 = new PersonE{ FirstName = "Jeffrey", LastName = "Ye" };
+Console.WriteLine($"pe1.Equals(pe2): {pe1.Equals(pe2)}");
+Console.WriteLine($"pe1 == pe2: {pe1 == pe2}");
+
+#!markdown
+
+OK，现在Equals和==的结果一样了，我们是否完成任务了呢？
+
+#!markdown
+
+当然没有。其实，编译器已经在向我们大声疾呼：你重写了Equals， 但是没有重写GetHashcode!
+
+>Severity Code Description Project File Line Suppression State Warning CS0659 'PersonE' overrides Object.Equals(object o) but does not override Object.GetHashCode() OverrideEqualsInCSharp D:\Jeffery\Github\Blog\src\dotnet\OverrideEqualsInCSharp\Person.cs 11 Active
+
+编译器为什么要发出这个警告呢？因为不重写GetHashcode很可能引入致命的Bug。
+
+假设现在程序需要组织以Person为Key的键值对数据结构，我们来看看会发生什么。
+
+#!csharp
+
+Dictionary<PersonE, string> PersonPositionDic = new();
+PersonPositionDic.Add(pe1, "Software Engineer");
+PersonPositionDic.Add(pe2, "Mechanical Engineer");  // NOT report duplicate key error!
+
+// The following call will throw KeyNotFoundException
+string pos = PersonPositionDic[new PersonE { FirstName = "Jeffrey", LastName = "Ye" }];
+
+#!markdown
+
+上例有两个点需要注意：
+
+1. pe1与pe2值相等，字典中添加pe1后，再添加pe2没有报duplicate key的错误
+2. 当用一个值相等的key到字典中索引时，会报KeyNotFoundException。
+
+上述两点并不一定就是问题，如果你恰好需要以对象的identity作为key，那就完全OK。但是，如果你已经为对象重写了Equals，而仍然在使用hash的数据结构（如hash table）中保留以identity的key就让对使用这个类的人产生极大的困惑。
+
+#!markdown
+
+### 如何重载GetHashcode？
+
+知道了为啥要重写hashcode后，就知道了重写它的原则：
+1. 如果两个对象Equals方法返回相等，那么它们的hashcode必须相等。
+2. 为了诸如hash table的数据结构高效运行，hashcode最好分布均匀，冲突少。
+
+满足第1条必要条件容易，但第二条就不是那么容易了。幸好，我们不需要自己去研究如何实现好的hashcode，已经有人帮我们实现了。例如，下面的实现参考了：[stackoverflow gethashcode question](http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode)
+
+#!csharp
+
+public class PersonF
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public override bool Equals(Object obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        var other = obj as PersonF;
+        return this.FirstName.Equals(other.FirstName)
+            && this.LastName.Equals(other.LastName);
+    }
+
+    public static bool operator ==(PersonF left, PersonF right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(PersonF left, PersonF right)
+    {
+        return !(left == right);
+    }
+
+    public override int GetHashCode()
+    {
+        int HashingBase = 13;
+        int HashingMultiplier = 7;
+
+        int hash = HashingBase;
+        hash = (hash * HashingMultiplier) + (FirstName is Object ? FirstName.GetHashCode() : 0);
+        hash = (hash * HashingMultiplier) + (LastName is Object ? LastName.GetHashCode() : 0);
+        return hash;
+    }
+}
+
+#!csharp
+
+// now we can use dictionary in the right way
+Dictionary<PersonF, string> PersonPositionDic = new();
+PersonPositionDic.Add(new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }, "Software Engineer");
+string position = PersonPositionDic[new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }];
+Console.WriteLine(position);
+
+// the following code will throw ArgumentException
+PersonPositionDic.Add(new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }, "Mechanical Engineer");
+
+#!markdown
+
+一切看起来都很完美，但事实并非如此。
+
+首先，在hashcode的实现中，整数在被放大，因此有可能溢出:
+
+#!csharp
+
+unchecked
+{
+    Console.WriteLine(Int32.MaxValue);
+    Console.WriteLine(Int32.MaxValue + 10);
+}
+
+#!markdown
+
+我们可以告诉编译器，不用在这里检查，因为hashcode并不关心这个check，放弃check相当于取mod。
+
+其次，我们可以通过把hash base与multiplier增大来降低hash冲突，并通过XOR运算提高效率，改进后的代码：
+
+#!csharp
+
+public class PersonG
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public override bool Equals(Object obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        var other = obj as PersonG;
+        return this.FirstName.Equals(other.FirstName)
+            && this.LastName.Equals(other.LastName);
+    }
+
+    public static bool operator ==(PersonG left, PersonG right)
+    {
+        if (left is null) return right is null;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(PersonG left, PersonG right)
+    {
+        return !(left == right);
+    }
+
+    public override int GetHashCode()
+    {
+        // Option 1(before .NET Core 2.1):
+        unchecked
+        {
+            // Choose large primes to avoid hashing collisions
+            int HashingBase = (int) 2166136261;
+            int HashingMultiplier = 16777619;
+
+            // use ^ replace +, to speed up
+            int hash = HashingBase;
+            hash = (hash * HashingMultiplier) ^ (FirstName is null ? 0: FirstName.GetHashCode());
+            hash = (hash * HashingMultiplier) ^ (LastName is null ? 0: LastName.GetHashCode());
+            return hash;
+        }
+
+        // // Option 2(.NET Core 2.1 or above):
+        // var hash = new System.HashCode();
+        // hash.Add(FirstName);
+        // hash.Add(LastName);
+        // return hash.ToHashCode();
+        
+        // // Option 3(.NET Core 2.1 or above):
+        // return System.HashCode.Combine(FirstName, LastName);
+    }
+}
+
+#!markdown
+
+实现完成，可是这也太复杂了，有没有简单一点的方法？有，如果你能使用.NET Core 2.1+, 那么System.HashCode struct可以让事情变得简单。
+
+```csharp
+public override int GetHashCode()
+{
+    var hash = new System.HashCode();
+    hash.Add(FirstName);
+    hash.Add(LastName);
+    return hash.ToHashCode();
+}
+```
+
+or:
+
+```csharp
+public override int GetHashCode()
+{
+    return System.HashCode.Combine(FirstName, LastName);
+}
+```
+
+更棒的是，property为null的情形，这个struct也能处理，因此不用担心。
+
+#!markdown
+
+### 结束了吗？
+
+没有。从上面的实现可以发现，要正确重载相等不是一件容易的事。这就要回到最基本的问题，何时应该要重写相等呢？通常是在你需要对象表现出纯数据特征时，也被非正式的成为数据对象。C#9引入了一个叫Record的新类型，专为数据对象而生。
+
+#!csharp
+
+public record PersonH
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+
+#!markdown
+
+任务完成，就这么简单！这是因为，在声明类型为record时，编译时，编译器会帮我们以值相等的语义重写`Equals, ==, !=, Gethashcode, ToString`，这是多么完美！
+
+让我们来测试一下：
+
+#!csharp
+
+var ph1 = new PersonH{ FirstName = "Jeffrey", LastName = "Ye" };
+var ph2 = new PersonH{ FirstName = "Jeffrey", LastName = "Ye" };
+Console.WriteLine($"ph1.Equals(ph2): {ph1.Equals(ph2)}");
+Console.WriteLine($"ph1 == ph2: {ph1 == ph2}");
+
+Dictionary<PersonH, string> PersonPositionDic = new();
+PersonPositionDic.Add(pg1, "Software Engineer");
+Console.WriteLine(PersonPositionDic[new PersonH{ FirstName = "Jeffrey", LastName = "Ye" }]);  // Software Engineer
+
+// PersonPositionDic.Add(pg2, "Mechanical Engineer");  // will throw duplicate key error
+
+#!markdown
+
+一切都按预期工作，就这么简单。
+
+#!markdown
+
+## 总结
+
+1. 如果你需要定义的类，概念上更趋向于数据对象（data objects），那么应该考虑使用record，这样就不用操心相等的重载，避免了不必要的麻烦。
+2. 实在不适合使用，或者受SDK限制不能使用record，同时还要覆写相等，那么你可以参考上面的方法来做。需要记住重载Equals时，通常都需要同时重载GetHashCode、操作符`==`和`!=`.
