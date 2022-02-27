@@ -188,3 +188,65 @@ accumulate = sb.ToString();
 // 获取子字符串
 string str = "Hello Jeffrey Ye";
 Console.WriteLine(str.Substring(6, 7));
+
+#!csharp
+
+// concat string
+string str1 = "Hello ";
+string str2 = "Jeffrey ";
+string str3 = "Ye";
+Console.WriteLine(str1 + str2 + str3);  // +操作符会调用string的concat方法
+Console.WriteLine(string.Concat(str1, str2, str3));  // 也可以直接调用string.Concat方法
+
+#!csharp
+
+// start with and end with
+string str4 = "Hello Jeffrey Ye";
+Console.WriteLine(str4.StartsWith("Hello"));
+Console.WriteLine(str4.EndsWith("Ye"));
+Console.WriteLine(str4.StartsWith("hello", StringComparison.Ordinal));
+
+#!csharp
+
+// find index
+// 注意：索引从0开始计算
+int idx1 = str4.IndexOf('J');  // can pass a char
+int idx2 = str4.LastIndexOf("Ye");  // can also pass a string
+Console.WriteLine($"idx1={idx1}, idx2={idx2}");
+
+#!csharp
+
+// insert
+Console.WriteLine(str4);
+Console.WriteLine(str4.Insert(5, "old frend "));
+
+// remove
+Console.WriteLine(str4.Remove(5, 7));
+
+// replace
+Console.WriteLine(str4.Replace('e', 'E'));
+
+// 这些操作，都讲创建新的字符串，原串保持不变
+Console.WriteLine(str4);
+
+#!csharp
+
+// join: 用指定的字符将字符串数组链接起来
+string[] strArr = new string[]{"Hello", "Jeffrey", "Ye"};
+Console.WriteLine(string.Join(' ', strArr));
+
+#!csharp
+
+// 大小写转换
+Console.WriteLine(str4.ToUpper());
+Console.WriteLine(str4.ToLower());
+
+#!csharp
+
+// trim
+var strToTrm = "   xxx   hello jeff   yyyyx";
+Console.WriteLine(strToTrm.Trim());
+Console.WriteLine(strToTrm.Trim(new char[]{' ', 'x', 'y'}));
+Console.WriteLine(strToTrm.Trim('x'));
+Console.WriteLine(strToTrm.TrimStart(new char[]{' ', 'x', 'y'}));
+Console.WriteLine(strToTrm.TrimEnd(new char[]{' ', 'x', 'y'}));
