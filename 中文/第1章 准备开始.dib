@@ -11,7 +11,9 @@
 
 ## C#演化史
 
-C#是由微软公司主导开发的一种强类型、静态语言。其设计深受Java的影响。从2000年面世后的很长一段时间，它都是一个闭源的，只支持Windows的开发语言。从2015年开始，微软公司开始推出.NET Core平台，经过6年时间，逐渐将其改造为开源跨平台开发语言。
+C#是由微软公司主导开发的一种强类型、静态语言。其设计深受Java的影响。从2000年面世后的很长一段时间，它都是一个闭源的，只支持Windows的开发语言。
+
+从2015年开始，微软公司开始推出.NET Core平台，经过6年时间，逐渐将其改造为开源跨平台开发语言。这是微软宏大的[The Journey to One .NET](https://www.youtube.com/watch?v=ctSqiD8BGPM)。
 
 下表列举了C#演进过程中的主要特性变化，表中一些名词还未介绍，不用担心，后续会逐渐熟悉。
 
@@ -54,9 +56,22 @@ C#是由微软公司主导开发的一种强类型、静态语言。其设计深
 
 说了这么多，终于可以进入正题了。我们先来看看最经典的hello world程序。
 
-#!csharp
+#!markdown
 
-Console.WriteLine("Hello World");
+```csharp
+using System;
+
+namespace HelloWorld
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Hello World!");
+        }
+    }
+}
+```
 
 #!markdown
 
@@ -70,3 +85,21 @@ Console.WriteLine("Hello World");
 通过IL，.NET用一个平台支持不同的编程语言，包括C#、F#、VB等。通过跨平台的CLR，.NET支持跨平台的运行能力。它们共同构成了.NET平台：
 
 ![net](./resources/what_is_dotnet.png)
+
+暂且不要关心这段代码的细节，我们在下一章将详细分析这段代码。
+
+#!markdown
+
+## Interactive Notebooks
+
+从python社区兴起的[jupyter notebook](https://jupyter.org/)把代码与markdown结合在一起，是一种极富表达力方式，非常适合用于教学演示及草拟思路。
+
+微软在.NET6开始引入了[Interactive Notebooks](https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.interactivewindow.interactivewindow?view=visualstudiosdk-2017)，它是一个支持C#、F#、VB等语言的编程环境，可以在vs code中运行。
+
+本书将主要采用notebook的方式来讲解C#。在不适合用notebook的情况下，使用markdown+工程项目的方式来讲解。上一节的helloWorld例子就采用了markdown+工程项目的方式。
+
+同样的例子，在notebook中是这样的：
+
+#!csharp
+
+Console.WriteLine("Hello World!");
