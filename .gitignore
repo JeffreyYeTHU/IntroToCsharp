@@ -1,1 +1,8 @@
+# mac files
 .DS_Store
+
+# c# related
+obj
+bin
+project-cache
+UserPrefs.xml
