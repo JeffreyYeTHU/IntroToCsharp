@@ -1,0 +1,187 @@
+#!markdown
+
+# C#基础
+
+在这一章，我们将学习：
+
+1. C#程序的基本组成
+2. C#类的概念
+3. 基本类型
+
+#!markdown
+
+## C#程序的基本组成
+
+#!markdown
+
+让我们重新看看HelloWorld程序：
+
+```csharp
+namespace HelloWorld  // 定义命名空间
+{
+    class Program  // 定义类
+    {
+        static void Main(string[] args)  // 定义方法
+        {
+            // 调用BCL（Base Class Lib）中的方法
+            System.Console.WriteLine("Hello World!");
+        }
+    }
+}
+```
+
+#!markdown
+
+程序第一行引用了命名空间`System`。第二行定义了命名空间`HelloWorld`。然后第三行代码在这个`HelloWorld`命名空间中定义了类`Program`。第四行代码定义了方法`Main`。第五行代调用`System`命名空间下`Console`类的`WriteLine`方法，输出了字符串`Hello World!`。
+
+这段简单的代码，包含了C#代码非常重要的信息：
+1. 代码组织的三个层级：命名空间->类->方法。
+   在C#中，方法是一个具体的操作，类是方法与属性的集合，命名空间是类的集合。
+2. 为了构建大型的程序，程序都会有外部依赖，命名空间既是类的集合，也是引入程序依赖的单元。
+   在上面的代码中，我们可以用另一种方式调用BCL中的方法，这种方式称为`using`。
+3. 关键字与标志符
+   关键字是预定义的保留标识符，对编译器有特殊意义。标志符是程序中的命名（包括类型、成员、变量、命名空间）。
+   例如，在代码`namespace HelloWorld`中，`namespace`是关键字，`HelloWorld`是标志符。
+   标志符命名有着通用的规则（一般叫做convention或者style），参见微软的[naming guidelines](https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/naming-guidelines)
+4. 名称为`Main`的方法，在C#中是一个特殊的方法，它被称为程序入口（entry point）：程序一旦启动，就开始运行该方法，因此名称为`Main`的方法在程序全局必须是唯一的。习惯上，这个Main方法会放在一个叫做`Program`的类中。虽然将这个类命名为其他名字，也可以编译通过，但是，遵循惯例（convention）一般都是好的编程习惯。
+
+#!markdown
+
+## 类（classes）
+
+类是C#中组织代码的最常见单元，它包含了属性（properties）和方法（methods）。
+
+#!csharp
+
+public class Circle
+{
+    // 定义一个圆的半径
+    private double _radius;
+
+    // 构造函数（constructor，也称构造器）
+    public Circle(double radius)
+    {
+        _radius = radius;
+    }
+}
+
+#!markdown
+
+上面的代码定义了一个新的类型，名称为`Circle`，我们从这个最简单的类出发，逐步学习类中所包含的元素。
+
+#!markdown
+
+### 构造器
+
+构造器是一个特殊的方法，它被称为类的构造函数（constructor）。通过构造器可以创建一个类的实例，例如：
+
+#!csharp
+
+// 创建一个Circle实例
+Circle circle1 = new Circle(5);
+
+#!markdown
+
+上面的代码创建了一个Circle实例，它的直径。创建实例的语法为：
+
+`TypeName variableName = new TypeName(arguments);`
+
+其中，`TypeName`是类的名称，`variableName`是类的实例名称，`arguments`是构造器的参数。
+
+类的实例也称为对象，因此创建实例也被称为对象的创建。
+
+#!csharp
+
+// 创建另一个实例
+Circle circle2 = new Circle(10);
+
+#!markdown
+
+由于类的定义中，只有一个构造器，用于初始化实例，因此创建完实例后并不能做什么，我们来丰富一下这个类，使其更丰满。
+
+#!markdown
+
+### 字段（fields）与属性（properties）
+
+通常，一个类型中既有数据，又有算法。数据通常会存储在字段（fields）中，而算法则在方法（methods）中实现。
+
+同时，存储数据就不可避免要对数据进行更新。这就是很多面向对象语言中参见的`getter`和`setter`方法：`getter`用于访问字段，`setter`用于更新字段。
+
+让我们来为类型`Circle`的直径添加`getter`与`setter`方法。
+
+#!csharp
+
+public class CircleA
+{
+    // 定义一个圆的半径
+    private double _radius;
+
+    // 构造函数（constructor，也称构造器）
+    public CircleA(double radius)
+    {
+        _radius = radius;
+    }
+
+    // getter方法
+    public double GetRadius()
+    {
+        return _radius;
+    }
+
+    // setter方法
+    public void SetRadius(double radius)
+    {
+        _radius = radius;
+    }
+}
+
+#!markdown
+
+在增加`getter`与`setter`后，我们可以通过`CircleA`的实例来访问直径，或者更新直径。
+
+#!csharp
+
+// 创建一个CircleA实例
+CircleA circleA1 = new CircleA(10);
+
+// 使用getter方法获取半径
+Console.WriteLine("Radius of circleA1 is {0}", circleA1.GetRadius());
+
+// 使用setter方法更新半径，然后再次访问
+circleA1.SetRadius(20);
+Console.WriteLine("After update, Radius of circleA1 is {0}", circleA1.GetRadius());
+
+#!markdown
+
+现在可以很更新访问和更新半径了，可是这个过程有些繁琐，需要依次定义fields、getter、setter。并且对每个field都需要做相同的重复性工作，为了简化这个常见的编程模式，C#引入了属性（properties），它们可以让我们在类中更加简单的定义数据。
+
+我们看看属性怎么实现与上面的类相同的工作。
+
+#!csharp
+
+public class CircleB
+{
+    // 定义半径属性
+    // 一个属性，就代替了CircleA类中的_radius变量、GetRadisus()方法和SetRadius()方法
+    public double Radius { get; set; }
+
+    // 构造函数
+    public CircleB(double radius)
+    {
+        Radius = radius;
+    }
+}
+
+#!csharp
+
+// 创建实例，然后更新属性
+CircleB circleB1 = new CircleB(10);
+
+// 使用getter方法获取半径
+// 注意：读属性的语法就是用点操作符（dot operator）直接访问
+Console.WriteLine("Radius of circleB1 is {0}", circleB1.Radius);
+
+// 使用setter方法更新半径，然后再次访问
+// 注意：写属性就是对该属性进行赋值
+circleB1.Radius = 20;
+Console.WriteLine("After update, Radius of circleB1 is {0}", circleB1.Radius);
