@@ -185,3 +185,46 @@ Console.WriteLine("Radius of circleB1 is {0}", circleB1.Radius);
 // 注意：写属性就是对该属性进行赋值
 circleB1.Radius = 20;
 Console.WriteLine("After update, Radius of circleB1 is {0}", circleB1.Radius);
+
+#!markdown
+
+### 方法（methods）
+
+属性用于存储数据，方法则用于构建算法，数据与算法一起构成了类。下面来看看如何定义方法。
+
+#!csharp
+
+public class CircleC
+{
+    public double Radius { get; set; }
+
+    public CircleC(double radius)
+    {
+        Radius = radius;
+    }
+
+    // 定义一个计算面积的方法
+    public double GetArea()
+    {
+        return Math.PI * Radius * Radius;
+    }
+}
+
+#!csharp
+
+// 调用方法计算面积
+CircleC circleC1 = new CircleC(10);
+Console.WriteLine($"Radius of circleC1 is {circleC1.Radius}, Area of circleC1 is {circleC1.GetArea()}" );
+
+#!markdown
+
+## 类的继承
+
+面向对象语言中，继承是复用代码的一种形式。在通常的论述中，认为继承好处颇多：
+1. 提高代码复用：继承可以让子类复用父类的代码，从而减少代码量。
+2. 由于减少了重复，因此代码的维护性降低（DO NOT REPEAT YOURSELF）。
+3. 让类之间产生了关系，为实现多态提供了条件。
+
+不过在近年来的编程实践中，有一种远离继承的趋势，最重要的原因就是继承带来的耦合性：继承关系是最强的一类耦合，这种强耦合不利于代码的扩展。
+
+在常见的code base中，框架代码与类库代码经常会见到继承。同时，C#所有
